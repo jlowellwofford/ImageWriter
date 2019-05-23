@@ -114,9 +114,14 @@ void *writerThread(void *targ) {
         }
         pthread_mutex_unlock(&rw_mutex);
 
-        int ret = write(td->file_out, &td->buf[buf_idx(idx)], td->blocks[idx].size);
-        if(ret == -1) perror("write error: ");
-        if(ret != td->blocks[idx].size) printf("we didn't write everything!");
+        if(td->blocks[idx].size > 0) {
+            int ret = write(td->file_out, &td->buf[buf_idx(idx)], td->blocks[idx].size);
+            if(ret == -1) perror("write error: ");
+            if(ret != td->blocks[idx].size) printf("we didn't write everything!");
+        } else if(!td->blocks[idx].end) {
+            // this shouldn't happen.  We got a zero length block, but it's not the end
+            printf("warning: got a zero length block, but not at the end of the file");
+        } 
 
         if(td->blocks[idx].end) pthread_exit(NULL);
 
